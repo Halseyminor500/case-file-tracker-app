@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Case 24STFL00432 - File Exchange Tracker</title>
+    <style>
+        * { box-sizing: border-box; }
+
+        :root {
+            --urgent-red: #dc2626;
+            --success-green: #16a34a;
+            --pending-amber: #d97706;
+            --primary-teal: #0d9488;
+            --bg-light: #f8fafc;
+            --surface-white: #ffffff;
+            --text-dark: #1e293b;
+            --text-muted: #64748b;
+            --border-light: #e2e8f0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-light);
+            color: var(--text-dark);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: var(--surface-white);
+            padding: 24px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            margin-bottom: 24px;
+            border-left: 5px solid var(--primary-teal);
+        }
+
+        h1 {
+            margin: 0 0 8px 0;
+            font-size: 28px;
+            color: var(--text-dark);
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin: 8px 0 0 0;
+        }
+
+        .action-bar {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .btn {
+            background: var(--primary-teal);
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 150ms ease;
+        }
+
+        .btn:hover {
+            background: #0f766e;
+        }
+
+        .btn-secondary {
+            background: var(--text-muted);
+        }
+
+        .btn-secondary:hover {
+            background: #475569;
+        }
+
+        .btn-danger {
+            background: var(--urgent-red);
+        }
+
+        .btn-danger:hover {
+            background: #b91c1c;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            border-bottom: 2px solid var(--border-light);
+            overflow-x: auto;
+        }
+
+        .tab {
+            padding: 12px 16px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-muted);
+            border-bottom: 3px solid transparent;
+            transition: all 150ms ease;
+            white-space: nowrap;
+        }
+
+        .tab.active {
+            color: var(--primary-teal);
+            border-bottom-color: var(--primary-teal);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .search-input {
+            margin-bottom: 16px;
+        }
+
+        input[type="text"], 
+        input[type="date"],
+        input[type="email"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border-light);
+            border-radius: 6px;
+            font-size: 13px;
+            font-family: inherit;
+        }
+
+        textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .filter-chips {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .chip {
+            padding: 6px 12px;
+            border: 1px solid var(--border-light);
+            border-radius: 20px;
+            font-size: 13px;
+            cursor: pointer;
+            background: white;
+            transition: all 150ms ease;
+        }
+
+        .chip.active {
+            background: var(--primary-teal);
+            color: white;
+            border-color: var(--primary-teal);
+        }
+
+        .file-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .file-card {
+            background: var(--surface-white);
+            border: 2px solid var(--border-light);
+            border-radius: 8px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 150ms ease;
+        }
+
+        .file-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border-color: var(--primary-teal);
+        }
+
+        .file-card.urgent {
+            border-color: var(--urgent-red);
+            background: rgba(220,38,38,0.02);
+        }
+
+        .file-name {
+            font-weight: 600;
+            font-size: 15px;
+            color: var(--text-dark);
+            margin-bottom: 8px;
+            word-break: break-word;
+        }
+
+        .file-meta {
+            display: flex;
+            gap: 12px;
+            font-size: 12px;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 11px;
+            text-transform: uppercase;
+        }
+
+        .status-draft { background: rgba(107,114,128,0.15); color: #374151; }
+        .status-shared { background: rgba(13,148,136,0.15); color: var(--primary-teal); }
+        .status-filed { background: rgba(22,163,74,0.15); color: var(--success-green); }
+        .status-served { background: rgba(59,130,246,0.15); color: #1d4ed8; }
+
+        .date-badge {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .description {
+            font-size: 13px;
+            color: var(--text-muted);
+            line-height: 1.4;
+            margin-bottom: 8px;
+        }
+
+        .file-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .file-actions button {
+            padding: 6px 10px;
+            font-size: 12px;
+            flex: 1;
+            min-width: 80px;
+        }
+
+        .summary-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .stat-box {
+            background: var(--surface-white);
+            padding: 16px;
+            border-radius: 8px;
+            border: 1px solid var(--border-light);
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary-teal);
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 4px;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            font-size: 13px;
+            margin-bottom: 6px;
+            color: var(--text-dark);
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: var(--text-dark);
+        }
+
+        .form-card {
+            background: white;
+            padding: 24px;
+            border-radius: 8px;
+            border: 1px solid var(--border-light);
+            max-width: 600px;
+        }
+
+        .log-entry {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-light);
+            display: flex;
+            gap: 16px;
+        }
+
+        .log-entry:last-child {
+            border-bottom: none;
+        }
+
+        .log-date {
+            font-size: 12px;
+            color: var(--text-muted);
+            min-width: 140px;
+            font-weight: 500;
+        }
+
+        .log-content {
+            flex: 1;
+        }
+
+        .log-from {
+            font-weight: 600;
+            color: var(--primary-teal);
+            margin-bottom: 4px;
+        }
+
+        .log-action {
+            color: var(--text-dark);
+            font-size: 14px;
+            margin-bottom: 6px;
+        }
+
+        .log-file {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.4);
+        }
+
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background-color: var(--surface-white);
+            padding: 24px;
+            border-radius: 8px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--text-muted);
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 24px;
+            justify-content: flex-end;
+        }
+
+        .success-message {
+            background: rgba(22,163,74,0.1);
+            border: 1px solid var(--success-green);
+            color: var(--success-green);
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 16px;
+            font-size: 13px;
+        }
+
+        .error-message {
+            background: rgba(220,38,38,0.1);
+            border: 1px solid var(--urgent-red);
+            color: var(--urgent-red);
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 16px;
+            font-size: 13px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        @media (max-width: 768px) {
+            .file-grid { grid-template-columns: 1fr; }
+            .tabs { flex-wrap: wrap; }
+            h1 { font-size: 20px; }
+            .action-bar { flex-direction: column; }
+            .action-bar button { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📁 File Exchange Tracker</h1>
+            <p class="subtitle">Case 24STFL00432 - Track file versions, status, and exchanges with Katherine</p>
+        </header>
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab(event, 'inventory')">📋 File Inventory</button>
+            <button class="tab" onclick="switchTab(event, 'log')">📝 Exchange Log</button>
+            <button class="tab" onclick="switchTab(event, 'tracker')">🔄 Status Tracker</button>
+            <button class="tab" onclick="switchTab(event, 'add')">➕ Add File</button>
+        </div>
+
+        <!-- INVENTORY TAB -->
+        <div id="inventory" class="tab-content active">
+            <div class="summary-stats">
+                <div class="stat-box">
+                    <div class="stat-value" id="totalFiles">0</div>
+                    <div class="stat-label">Total Files</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="draftCount">0</div>
+                    <div class="stat-label">Drafts</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="filedCount">0</div>
+                    <div class="stat-label">Filed</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="sharedCount">0</div>
+                    <div class="stat-label">Shared</div>
+                </div>
+            </div>
+
+            <div class="search-input">
+                <input type="text" id="searchBox" placeholder="Search files by name, type, or description..." onkeyup="filterFiles()">
+            </div>
+
+            <div class="filter-chips">
+                <div class="chip active" onclick="filterByStatus(event, 'all')">All</div>
+                <div class="chip" onclick="filterByStatus(event, 'draft')">Draft</div>
+                <div class="chip" onclick="filterByStatus(event, 'shared')">Shared</div>
+                <div class="chip" onclick="filterByStatus(event, 'filed')">Filed</div>
+                <div class="chip" onclick="filterByStatus(event, 'urgent')">Urgent</div>
+            </div>
+            <div class="file-grid" id="fileInventory"></div>
+        </div>
+
+        <!-- LOG TAB -->
+        <div id="log" class="tab-content">
+            <h2 class="section-title">📝 File Exchange Log</h2>
+            <p style="color: var(--text-muted); margin-bottom: 16px;">Record of who sent what, when, and for what purpose</p>
+            <div id="exchangeLog" style="background: white; border-radius: 8px; border: 1px solid var(--border-light); overflow: hidden;"></div>
+        </div>
+
+        <!-- TRACKER TAB -->
+        <div id="tracker" class="tab-content">
+            <h2 class="section-title">🔄 File Status Tracker</h2>
+            <div id="statusTracker"></div>
+        </div>
+
+        <!-- ADD FILE TAB -->
+        <div id="add" class="tab-content">
+            <h2 class="section-title">➕ Add New File to Tracker</h2>
+            <div style="background: white; padding: 24px; border-radius: 8px; border: 1px solid var(--border-light); max-width: 600px;">
+                <div class="form-group">
+                    <label>File Name</label>
+                    <input type="text" id="newFileName" placeholder="e.g., Motion-to-Compel-v3.docx">
+                </div>
+                <div class="form-group">
+                    <label>Status</label>
+                    <select id="newFileStatus">
+                        <option value="draft">Draft</option>
+                        <option value="shared">Shared with Katherine</option>
+                        <option value="filed">Filed with Court</option>
+                        <option value="served">Served on Opposing</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Date</label>
+                    <input type="date" id="newFileDate">
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="newFileDesc" placeholder="What is this file? What does it contain?"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="newFileUrgent"> Mark as URGENT
+                    </label>
+                </div>
+                <button class="btn" onclick="addNewFile()">Add to Tracker</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- EDIT MODAL -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span>Edit File</span>
+                <button class="modal-close" onclick="closeEditModal()">&times;</button>
+            </div>
+            <form onsubmit="saveFileEdit(event)">
+                <div class="form-group">
+                    <label>File Name</label>
+                    <input type="text" id="editFileName" required>
+                </div>
+                <div class="form-group">
+                    <label>Status</label>
+                    <select id="editFileStatus" required>
+                        <option value="draft">Draft</option>
+                        <option value="shared">Shared with Katherine</option>
+                        <option value="filed">Filed with Court</option>
+                        <option value="served">Served on Opposing</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Date</label>
+                    <input type="date" id="editFileDate" required>
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="editFileDesc" required></textarea>
+                </div>
+                <div class="form-group checkbox-group">
+                    <input type="checkbox" id="editFileUrgent">
+                    <label for="editFileUrgent">🚨 Mark as URGENT</label>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeEditModal()">Cancel</button>
+                    <button type="submit" class="btn">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ADD LOG MODAL -->
+    <div id="logModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span>Add Log Entry</span>
+                <button class="modal-close" onclick="closeLogModal()">&times;</button>
+            </div>
+            <form onsubmit="addLogEntry(event)">
+                <div class="form-group">
+                    <label>Date & Time</label>
+                    <input type="datetime-local" id="logDateTime" required>
+                </div>
+                <div class="form-group">
+                    <label>From (e.g., You, Katherine, Adobe Sign)</label>
+                    <input type="text" id="logFrom" required>
+                </div>
+                <div class="form-group">
+                    <label>Action/Description</label>
+                    <textarea id="logAction" placeholder="What happened?" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Related File</label>
+                    <input type="text" id="logFile" placeholder="File name (optional)">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeLogModal()">Cancel</button>
+                    <button type="submit" class="btn">Add Entry</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const fileDatabase = [
+            {id: 1, name: "Motion-to-Compel-Financial-Disclosures-v3.docx", status: "draft", date: "2025-12-15", description: "Motion to compel petitioner's FL-105, FL-140, FL-150, FL-160 financial forms. 18+ months outstanding.", type: "motion", urgent: true},
+            {id: 2, name: "DV-116-Form-Feb11-Hearing.pdf", status: "shared", date: "2025-12-16", description: "New DV-116 restraining order form showing February 11th hearing date. Sent to Katherine for process server.", type: "court-form", urgent: true},
+            {id: 3, name: "RFO-Support-Modification-SIGNED.pdf", status: "filed", date: "2025-12-05", description: "Request for Order - Child/Spousal Support Modification. Income $0. 10-page declaration. SIGNED.", type: "rfo", urgent: false},
+            {id: 4, name: "Notice-of-Deposition-Shannon-Minor.docx", status: "shared", date: "2025-12-14", description: "Deposition notice for Petitioner (Shannon Minor). BHPD consultation integrated.", type: "deposition", urgent: false},
+            {id: 5, name: "Motion-to-Stay-Ex-Parte.docx", status: "draft", date: "2025-12-13", description: "Motion to stay divorce pending criminal case resolution. Constitutional violations argument. Awaiting AI revision.", type: "motion", urgent: true},
+            {id: 6, name: "Vacate-DVRO-Hague-Convention.docx", status: "draft", date: "2025-12-10", description: "Motion to vacate DVRO hearing - Hague Service Convention violation. Email service without consent.", type: "motion", urgent: true},
+            {id: 7, name: "Analysis-of-Evidence-500-Emails.pdf", status: "shared", date: "2025-12-08", description: "Complete analysis of all allegations with timeline from 500+ emails and iMessages.", type: "evidence", urgent: false},
+            {id: 8, name: "LEGAL-JUSTICE-AI.md", status: "shared", date: "2025-12-12", description: "Strategic legal analysis and theories. Complete case framework.", type: "strategy", urgent: false},
+            {id: 9, name: "Minor_v_Minor_All-in-One_with_Exhibit_D_Vanguard.docx", status: "draft", date: "2025-12-17", description: "All-in-one motion with Vanguard account exhibits - Exhibit D financial records.", type: "motion", urgent: true},
+            {id: 10, name: "Minor_v_Minor_ExParte_All-in-One.docx", status: "draft", date: "2025-12-17", description: "Ex Parte application with all exhibits consolidated.", type: "motion", urgent: true},
+            {id: 11, name: "Minor_v_Minor_All-in-One_Motion_and_Exhibits.docx", status: "draft", date: "2025-12-17", description: "Motion with exhibits - consolidated version.", type: "motion", urgent: true},
+            {id: 12, name: "Respondent's Notice of Improper Service, Due Process Objections.docx", status: "draft", date: "2025-12-17", description: "Notice of improper service and due process violations - protective filing.", type: "response", urgent: true},
+            {id: 13, name: "Love and Law - Product Strategy Notes.md", status: "shared", date: "2025-12-17", description: "Strategic product notes for Justice-AI Love and Law platform.", type: "strategy", urgent: false}
+        ];
+
+        const exchangeLog = [
+            {date: "2025-12-16 10:06 PM", from: "Katherine (SMS)", action: "I emailed the new dv116 form to the process server", file: "DV-116-Form-Feb11-Hearing.pdf"},
+            {date: "2025-12-15 6:56 PM", from: "You", action: "I've still not been served her initial financial disclosures", file: "Motion-to-Compel-Financial-Disclosures-v3.docx"},
+            {date: "2025-12-13 11:40 AM", from: "You", action: "Stop work on previous motion to stay. The AI is more powerful and found deficiencies", file: "Motion-to-Stay-Ex-Parte.docx"},
+            {date: "2025-12-12 10:42 AM", from: "Katherine (SMS)", action: "Hi following up on exhibits for motion to get rid of the judge", file: "Motion-to-Stay-Ex-Parte.docx"},
+            {date: "2025-12-05 6:40 PM", from: "Adobe Sign", action: "RFO with Dec no exhibits to be signed - SIGNED", file: "RFO-Support-Modification-SIGNED.pdf"}
+        ];
+
+        let currentFilter = 'all';
+        let allFiles = [...fileDatabase];
+
+        function renderInventory() {
+            const container = document.getElementById('fileInventory');
+            const filtered = allFiles.filter(f => {
+                const statusMatch = currentFilter === 'all' || f.status === currentFilter || (currentFilter === 'urgent' && f.urgent);
+                const searchBox = document.getElementById('searchBox').value.toLowerCase();
+                const searchMatch = f.name.toLowerCase().includes(searchBox) || 
+                                   f.description.toLowerCase().includes(searchBox) ||
+                                   f.type.toLowerCase().includes(searchBox);
+                return statusMatch && searchMatch;
+            });
+
+            container.innerHTML = filtered.map(f => `
+                <div class="file-card ${f.urgent ? 'urgent' : ''} ${f.status === 'draft' ? 'new' : ''}">
+                    <div class="file-name">${f.name}</div>
+                    <div class="file-meta">
+                        <span class="status-badge status-${f.status}">${f.status.replace('-', ' ')}</span>
+                        <span class="date-badge">📅 ${new Date(f.date).toLocaleDateString()}</span>
+                        ${f.urgent ? '<span style="color: var(--urgent-red); font-weight: 600;">🚨 URGENT</span>' : ''}
+                    </div>
+                    <div class="description">${f.description}</div>
+                    <div style="display: flex; gap: 8px; margin-top: 10px; font-size: 12px;">
+                        <button class="btn btn-secondary" style="padding: 6px 10px; font-size: 12px;">Edit</button>
+                        <button class="btn btn-secondary" style="padding: 6px 10px; font-size: 12px;" onclick="markAsServed(${f.id})">Mark Served</button>
+                    </div>
+                </div>
+            `).join('');
+
+            updateStats();
+        }
+
+        function updateStats() {
+            document.getElementById('totalFiles').textContent = allFiles.length;
+            document.getElementById('draftCount').textContent = allFiles.filter(f => f.status === 'draft').length;
+            document.getElementById('filedCount').textContent = allFiles.filter(f => f.status === 'filed').length;
+            document.getElementById('sharedCount').textContent = allFiles.filter(f => f.status === 'shared').length;
+        }
+
+        function filterByStatus(e, status) {
+            document.querySelectorAll('.chip').forEach(chip => chip.classList.remove('active'));
+            e.target.classList.add('active');
+            currentFilter = status;
+            renderInventory();
+        }
+
+        function filterFiles() {
+            renderInventory();
+        }
+
+        function switchTab(e, tabName) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            e.target.classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+
+            if (tabName === 'log') renderExchangeLog();
+            if (tabName === 'tracker') renderStatusTracker();
+        }
+
+        function renderExchangeLog() {
+            const container = document.getElementById('exchangeLog');
+            container.innerHTML = exchangeLog.map(e => `
+                <div style="padding: 16px; border-bottom: 1px solid var(--border-light); display: flex; gap: 16px;">
+                    <div style="font-size: 12px; color: var(--text-muted); min-width: 140px; font-weight: 500;">${e.date}</div>
+                    <div style="flex: 1;">
+                        <div style="font-weight: 600; color: var(--primary-teal); margin-bottom: 4px;">${e.from}</div>
+                        <div style="color: var(--text-dark); font-size: 14px; margin-bottom: 6px;">${e.action}</div>
+                        <div style="font-size: 12px; color: var(--text-muted);">📄 ${e.file}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderStatusTracker() {
+            const container = document.getElementById('statusTracker');
+            const statuses = ['draft', 'shared', 'filed', 'served'];
+            container.innerHTML = statuses.map(status => {
+                const filesInStatus = allFiles.filter(f => f.status === status);
+                return `
+                    <div style="margin-bottom: 24px;">
+                        <h3 style="font-size: 16px; font-weight: 600; margin: 0 0 12px 0; text-transform: capitalize;">
+                            ${status.replace('-', ' ')} (${filesInStatus.length})
+                        </h3>
+                        <div style="display: grid; gap: 8px;">
+                            ${filesInStatus.map(f => `
+                                <div style="padding: 12px; background: white; border-left: 3px solid var(--primary-teal); border-radius: 4px;">
+                                    <div style="font-weight: 600; font-size: 14px;">${f.name}</div>
+                                    <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">📅 ${new Date(f.date).toLocaleDateString()}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function addNewFile() {
+            const name = document.getElementById('newFileName').value;
+            const status = document.getElementById('newFileStatus').value;
+            const date = document.getElementById('newFileDate').value;
+            const desc = document.getElementById('newFileDesc').value;
+            const urgent = document.getElementById('newFileUrgent').checked;
+
+            if (!name || !date) {
+                alert('Please fill in file name and date');
+                return;
+            }
+
+            const newFile = {
+                id: allFiles.length + 1,
+                name: name,
+                status: status,
+                date: date,
+                description: desc,
+                type: 'document',
+                urgent: urgent
+            };
+
+            allFiles.unshift(newFile);
+            document.getElementById('newFileName').value = '';
+            document.getElementById('newFileDate').value = '';
+            document.getElementById('newFileDesc').value = '';
+            document.getElementById('newFileUrgent').checked = false;
+            renderInventory();
+            alert('File added to tracker!');
+        }
+
+        function markAsServed(id) {
+            const file = allFiles.find(f => f.id === id);
+            if (file) {
+                file.status = 'served';
+                renderInventory();
+                alert(`${file.name} marked as served!`);
+            }
+        }
+
+        renderInventory();
+        updateStats();
+    </script>
+</body>
+</html>
